@@ -2,6 +2,7 @@
 image: ubuntu:20.04
 # Functions that should be executed before the build script is run
 before_script:
+  - apt-get update -y
   - apt-get install gcc g++ make doxygen -y
 pages:
   script:
