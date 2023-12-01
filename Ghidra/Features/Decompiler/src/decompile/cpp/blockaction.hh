@@ -318,6 +318,19 @@ public:
   virtual int4 apply(Funcdata &data);
 };
 
+/// \brief TODO
+///
+/// TODO
+class ActionRevertISD : public Action {
+public:
+  ActionRevertISD(const string &g) : Action(0,"revertisd",g) {} ///< Constructor
+  virtual Action *clone(const ActionGroupList &grouplist) const {
+    if (!grouplist.contains(getGroup())) return (Action *)0;
+    return new ActionRevertISD(getGroup());
+  }
+  virtual int4 apply(Funcdata &data);
+};
+
 /// \brief Perform final organization of the control-flow structure
 ///
 /// Label unstructured edges, order switch cases, and order disjoint components of the control-flow

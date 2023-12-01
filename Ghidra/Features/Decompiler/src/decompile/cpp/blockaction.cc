@@ -2176,6 +2176,17 @@ int4 ActionBlockStructure::apply(Funcdata &data)
   return 0;
 }
 
+/// \brief TODO
+///
+/// TODO
+/// \param data TODO
+int4 ActionRevertISD::apply(Funcdata &data)
+
+{
+  BlockGraph &graph(data.getStructure());
+  return 0;
+}
+
 int4 ActionFinalStructure::apply(Funcdata &data)
 
 {
