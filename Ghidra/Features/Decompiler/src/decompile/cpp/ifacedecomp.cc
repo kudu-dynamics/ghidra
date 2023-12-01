@@ -79,6 +79,7 @@ void IfaceDecompCapability::registerCommands(IfaceStatus *status)
   status->registerCom(new IfcGlobalRegisters(),"global","registers");
   status->registerCom(new IfcGraphDataflow(),"graph","dataflow");
   status->registerCom(new IfcGraphControlflow(),"graph","controlflow");
+  status->registerCom(new IfcGraphStructuredflow(),"graph","structuredflow");
   status->registerCom(new IfcGraphDom(),"graph","dom");
   status->registerCom(new IfcPrintLanguage(),"print","language");
   status->registerCom(new IfcPrintCStruct(),"print","C");
@@ -2522,11 +2523,48 @@ void IfcGraphDataflow::execute(istream &s)
 }
 
 /// \class IfcGraphControlflow
-/// \brief Write a graph representation of control-flow to a file: `graph controlflow <filename>`
+/// \brief Write a graph representation of control-flow to a file: `graph controlflow <filename> xml`
 ///
 /// The control-flow graph for the \e current function, in its current state of transform,
 /// is written to the indicated file.
+/// By default, the output file format will be serialized to Renoir; however, if specified,
+/// XML will be used instead.
 void IfcGraphControlflow::execute(istream &s)
+
+{
+  string filename;
+  string as_xml;
+
+  if (dcp->fd == (Funcdata *)0)
+    throw IfaceExecutionError("No function selected");
+
+  s >> filename;
+  s >> as_xml;
+  if (filename.size()==0)
+    throw IfaceParseError("Missing output file");
+  if (dcp->fd->getBasicBlocks().getSize()==0)
+    throw IfaceExecutionError("Basic block structure not calculated");
+
+  ofstream thefile( filename.c_str());
+  if (!thefile)
+    throw IfaceExecutionError("Unable to open output file: "+filename);
+
+  if (as_xml.size()==0)
+    dump_controlflow_graph(dcp->fd->getName(),dcp->fd->getBasicBlocks(),thefile);
+  else {
+    XmlEncode encoder(thefile);
+    dcp->fd->getBasicBlocks().encode(encoder);
+  }
+  thefile.close();
+}
+
+/// \class IfcGraphStructuredflow
+/// \brief Write a graph representation of structured control-flow to a file: `graph structuredflow <filename>`
+///
+/// The structured control-flow graph for the \e current function, in its current state of transform,
+/// is written to the indicated file.
+/// By default, the output file format will be XML.
+void IfcGraphStructuredflow::execute(istream &s)
 
 {
   string filename;
@@ -2539,12 +2577,29 @@ void IfcGraphControlflow::execute(istream &s)
     throw IfaceParseError("Missing output file");
   if (dcp->fd->getBasicBlocks().getSize()==0)
     throw IfaceExecutionError("Basic block structure not calculated");
-  ofstream thefile( filename.c_str());
-  if (!thefile)
-    throw IfaceExecutionError("Unable to open output file: "+filename);
 
-  dump_controlflow_graph(dcp->fd->getName(),dcp->fd->getBasicBlocks(),thefile);
-  thefile.close();
+  try {
+    ofstream thefile( filename.c_str());
+    if (!thefile)
+      throw IfaceExecutionError("Unable to open output file: "+filename);
+
+    BlockGraph resultgraph;
+    vector<FlowBlock *> rootlist;
+    
+    resultgraph.buildCopy(dcp->fd->getBasicBlocks());
+    resultgraph.structureLoops(rootlist);
+    resultgraph.calcForwardDominator(rootlist);
+
+    CollapseStructure collapse(resultgraph);
+    collapse.collapseAll();
+
+    XmlEncode encoder(thefile);
+    resultgraph.encode(encoder);
+    thefile.close();
+  }
+  catch(LowlevelError &err) {
+    *status->optr << err.explain << endl;
+  }
 }
 
 /// \class IfcGraphDom

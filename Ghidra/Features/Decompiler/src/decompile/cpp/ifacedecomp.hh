@@ -485,6 +485,11 @@ public:
   virtual void execute(istream &s);
 };
 
+class IfcGraphStructuredflow : public IfaceDecompCommand {
+public:
+  virtual void execute(istream &s);
+};
+
 class IfcGraphDom : public IfaceDecompCommand {
 public:
   virtual void execute(istream &s);
