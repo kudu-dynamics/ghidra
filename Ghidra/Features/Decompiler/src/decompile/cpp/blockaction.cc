@@ -1459,6 +1459,49 @@ bool CollapseStructure::ruleBlockGoto(FlowBlock *bl)
   return false;
 }
 
+/// For the given FlowBlock, look for an incoming goto edge that connects to another node
+/// that has multiple predecessors.
+/// \return \b true if the structure was applied
+bool CollapseStructure::ruleBlockISC(FlowBlock *bl)
+
+{
+  // Detected node must have at least one incoming goto edge
+  if (!bl->isUnstructuredTarget()) return false;
+
+  // Detected node must have multiple predecessors
+  int4 sizeIn = bl->sizeIn();
+  if (sizeIn < 2) return false;
+
+  // Detected node must have at least one successor
+  int4 sizeOut = bl->sizeOut();
+  if (sizeOut < 1) return false;
+
+  if (bl->isInteriorGotoTarget()) {
+    for(int4 i=0;i<sizeIn;++i) {
+      if (bl->isGotoIn(i)) {
+        // get src block
+        FlowBlock * dst = bl->subBlock(i);
+
+        //graph.removeEdge(, bl)
+      }
+    }
+  }
+
+  // Duplicate detected node and all its outgoing edges
+  /*
+  graph.newBlockCopy();
+  graph.newBlockList();
+  graph.addBlock(ret);
+  graph.removeEdge()
+  addEdge
+  removeBlock - Remove a FlowBlock from \b this BlockGraph
+  removeFromFlow - Remove given FlowBlock preserving flow in \b this
+  removeFromFlowSplit - Remove FlowBlock splitting flow between input and output edges
+  spliceBlock - splice given flowblock together with its output
+  */
+  return true;
+}
+
 /// Try to find an if structure, where the condition clause does not exit,
 /// starting with the given FlowBlock.
 /// \param bl is the given FlowBlock
@@ -1783,6 +1826,10 @@ int4 CollapseStructure::collapseInternal(FlowBlock *targetbl)
 	  change = true;
 	  continue;
 	}
+  if (ruleBlockISC(bl)) {
+    change = true;
+    continue;
+  }
 	if (ruleBlockCat(bl)) {
 	  change = true;
 	  continue;

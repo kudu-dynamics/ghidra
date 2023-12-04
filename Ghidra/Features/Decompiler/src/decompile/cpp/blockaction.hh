@@ -207,6 +207,7 @@ class CollapseStructure {
   bool updateLoopBody(void);			///< Find likely \e unstructured edges within the innermost loop body
   FlowBlock *selectGoto(void);			///< Select an edge to mark as  \e unstructured
   bool ruleBlockGoto(FlowBlock *bl);		///< Attempt to apply the BlockGoto structure
+  bool ruleBlockISC(FlowBlock *bl);    ///< Attempt to deoptimize Irreducible Statement Condensing (ISC)
   bool ruleBlockCat(FlowBlock *bl);		///< Attempt to apply a BlockList structure
   bool ruleBlockOr(FlowBlock *bl);		///< Attempt to apply a BlockCondition structure
   bool ruleBlockProperIf(FlowBlock *bl);	///< Attempt to apply a 2 component form of BlockIf
