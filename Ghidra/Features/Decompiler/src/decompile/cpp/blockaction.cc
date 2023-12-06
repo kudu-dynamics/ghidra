@@ -2176,6 +2176,79 @@ int4 ActionBlockStructure::apply(Funcdata &data)
   return 0;
 }
 
+/// \brief TODO
+/// 
+/// TODO 
+/// \param data TODO
+int4 ActionRevertISC::apply(Funcdata &data)
+
+{
+  BlockGraph &graph(data.getStructure());
+
+  // Detect cases in the graph that contain a goto edge connecting one node to
+  // another node that has multiple predecessors.
+
+  graph.buildCopy(data.getBasicBlocks());
+
+  const vector<FlowBlock *> &blockList(graph.getList());
+  if (blockList.empty()) return 0;
+
+  bool hasGoto = false;
+  for(int4 i=0;i<graph.getSize();++i) {
+    BlockBasic *bb = (BlockBasic *)graph.getBlock(i);
+
+    // Detected node must have multiple predecessors
+    int4 sizeIn = bb->sizeIn();
+    if (sizeIn < 2) continue;
+
+    // Detected node must have at least one successor
+    int4 sizeOut = bb->sizeOut();
+    if (sizeOut < 1) continue;
+
+    if (bb->isUnstructuredTarget()) {
+      hasGoto = true;
+    }
+    if (bb->isInteriorGotoTarget()) {
+      hasGoto = true;
+    }
+  }
+
+  /*
+  FlowBlock *parent,vector<FlowBlock *> &vec;
+  FlowBlock *bl,*ret;
+
+  for(int4 i=0;i<parent->sizeIn();++i) {
+    bl = parent->getIn(i)->getCopyMap();
+    while(bl != (FlowBlock *)0) {
+      if (!bl->isMark()) {
+	      ret = (FlowBlock *)0;
+	      if (bl->getType() == FlowBlock::t_goto) {
+	        if (((BlockGoto *)bl)->gotoPrints())
+	          ret = ((BlockGoto *)bl)->getGotoTarget();
+	      }
+	      else if (bl->getType() == FlowBlock::t_if)
+	        // if this is an ifgoto block, get target, otherwise null
+	        ret = ((BlockIf *)bl)->getGotoTarget();
+
+	      if (ret != (FlowBlock *)0) {
+	        while(ret->getType() != FlowBlock::t_basic) {
+  	        ret = ret->subBlock(0);
+          } // end while
+	        if (ret == parent) {
+	          bl->setMark();
+	          vec.push_back(bl);
+	        }
+	      }
+      } // end if
+      bl = bl->getParent();
+    } // end while
+  } // end for
+  */
+
+  // Duplicate shaded node
+  return 0;
+}
+
 int4 ActionFinalStructure::apply(Funcdata &data)
 
 {

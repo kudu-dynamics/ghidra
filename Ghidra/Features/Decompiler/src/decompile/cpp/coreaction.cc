@@ -5600,6 +5600,7 @@ void ActionDatabase::universalAction(Architecture *conf)
   act->addAction( new ActionDynamicSymbols("dynamic") );
   act->addAction( new ActionNameVars("merge") );
   act->addAction( new ActionSetCasts("casts") );
+  act->addAction( new ActionRevertISC("blockrecovery"));
   act->addAction( new ActionFinalStructure("blockrecovery") );
   act->addAction( new ActionPrototypeWarnings("protorecovery") );
   act->addAction( new ActionStop("base") );
