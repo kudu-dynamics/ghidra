@@ -58,6 +58,17 @@ void BlockEdge::decode(Decoder &decoder,BlockMap &resolver)
   decoder.closeElement(elemId);
 }
 
+void BlockEdge::printEdge(ostream &s, string dir) const
+
+{
+  int4 blockIndex = point->getIndex();
+  int4 blockFlags = point->getFlags();
+  int4 blockType = point->getType();
+  s << dir << ' ' << label << ' ';
+  point->printHeader(s);
+  s << ' ' << reverse_index;
+}
+
 FlowBlock::FlowBlock(void)
 
 {
@@ -622,6 +633,18 @@ void FlowBlock::printTree(ostream &s,int4 level) const
     s << "  ";
   printHeader(s);
   s << endl;
+
+  for(int4 i=0;i<intothis.size();++i) {
+    for(int4 j=0;j<level;++j) s << "  ";
+    intothis[i].printEdge(s, "in");
+    s << endl;
+  }
+  for(int4 i=0;i<outofthis.size();++i) {
+    for(int4 j=0;j<level;++j) s << "  ";
+    outofthis[i].printEdge(s, "out");
+    s << endl;
+  }
+  
 }
 
 /// If \b this FlowBlock was ends with a computed jump, retrieve

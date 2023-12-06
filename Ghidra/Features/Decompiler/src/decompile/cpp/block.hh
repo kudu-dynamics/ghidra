@@ -62,6 +62,7 @@ struct BlockEdge {
   BlockEdge(FlowBlock *pt,uint4 lab,int4 rev) { label=lab; point=pt; reverse_index = rev; }	///< Constructor
   void encode(Encoder &encoder) const;	///< Encode \b this edge to a stream
   void decode(Decoder &decoder,BlockMap &resolver);	///< Restore \b this edge from a stream
+  void printEdge(ostream &s, string dir) const;
 };
 
 /// \brief Description of a control-flow block containing PcodeOps
