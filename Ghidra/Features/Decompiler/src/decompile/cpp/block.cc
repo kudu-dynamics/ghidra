@@ -655,6 +655,46 @@ void FlowBlock::printHeader(ostream &s) const
   }
 }
 
+void FlowBlock::printFlags(ostream &s) const
+
+{
+  s << "(";
+  if (flags & f_goto_goto) s << "goto_goto";
+  s << "|";
+  if (flags & f_break_goto) s << "break_goto";
+  s << "|";
+  if (flags & f_continue_goto) s << "continue_goto";
+  s << "|";
+  if (flags & f_switch_out) s << "switch_out";
+  s << "|";
+  if (flags & f_unstructured_targ) s << "unstructured_targ";
+  s << "|";
+  if (flags & f_mark) s << "mark";
+  s << "|";
+  if (flags & f_mark2) s << "mark2";
+  s << "|";
+  if (flags & f_entry_point) s << "entry_point";
+  s << "|";
+  if (flags & f_interior_gotoout) s << "interor_gotoout";
+  s << "|";
+  if (flags & f_interior_gotoin) s << "interior_gotoin";
+  s << "|";
+  if (flags & f_label_bumpup) s << "label_bumpup";
+  s << "|";
+  if (flags & f_donothing_loop) s << "donothing_loop";
+  s << "|";
+  if (flags & f_dead) s << "dead";
+  s << "|";
+  if (flags & f_whiledo_overflow) s << "whiledo_overflow";
+  s << "|";
+  if (flags & f_flip_path) s << "flip_path";
+  s << "|";
+  if (flags & f_joined_block) s << "joined_block";
+  s << "|";
+  if (flags & f_duplicate_block) s << "duplicate_block";
+  s << ")";
+}
+
 /// Recursively print out the hierarchical structure of \b this FlowBlock.
 /// \param s is the output stream
 /// \param level is the current level of indentation
@@ -666,6 +706,8 @@ void FlowBlock::printTree(ostream &s,int4 level) const
   for(i=0;i<level;++i)
     s << "  ";
   printHeader(s);
+  s << " ";
+  printFlags(s);
   s << endl;
 
   for(int4 i=0;i<intothis.size();++i) {

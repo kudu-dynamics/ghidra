@@ -203,6 +203,7 @@ public:
   virtual void scopeBreak(int4 curexit,int4 curloopexit) {}
 
   virtual void printHeader(ostream &s) const;		///< Print a simple description of \b this to stream
+  virtual void printFlags(ostream &s) const;
   virtual void printTree(ostream &s,int4 level) const;	///< Print tree structure of any blocks owned by \b this
 
   /// \brief Print raw instructions contained in \b this FlowBlock
