@@ -675,7 +675,7 @@ void FlowBlock::printFlags(ostream &s) const
   s << "|";
   if (flags & f_entry_point) s << "entry_point";
   s << "|";
-  if (flags & f_interior_gotoout) s << "interor_gotoout";
+  if (flags & f_interior_gotoout) s << "interior_gotoout";
   s << "|";
   if (flags & f_interior_gotoin) s << "interior_gotoin";
   s << "|";
