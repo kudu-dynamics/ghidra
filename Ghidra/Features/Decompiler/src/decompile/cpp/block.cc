@@ -58,13 +58,47 @@ void BlockEdge::decode(Decoder &decoder,BlockMap &resolver)
   decoder.closeElement(elemId);
 }
 
+void BlockEdge::printEdgeLabel(ostream &s) const
+
+{
+  uint4 isUnstructured = label & point->f_goto_edge;
+  uint4 isLoop = label & point->f_loop_edge;
+  uint4 isDefaultSwitch = label & point->f_defaultswitch_edge;
+  uint4 isIrreducible = label & point->f_irreducible;
+  uint4 isTree = label & point->f_tree_edge;
+  uint4 isForward = label & point->f_forward_edge;
+  uint4 isCross = label & point->f_cross_edge;
+  uint4 isBack = label & point->f_back_edge;
+  uint4 isLoopExit = label & point->f_loop_exit_edge;
+  if (isUnstructured)
+    s << "u";
+  if (isLoop)
+    s << "l";
+  if (isDefaultSwitch)
+    s << "d";
+  if (isIrreducible)
+    s << "i";
+  if (isTree)
+    s << "t";
+  if (isForward)
+    s << "f";
+  if (isCross)
+    s << "c";
+  if (isBack)
+    s << "b";
+  if (isLoopExit)
+    s << "e";
+}
+
 void BlockEdge::printEdge(ostream &s, string dir) const
 
 {
   int4 blockIndex = point->getIndex();
   int4 blockFlags = point->getFlags();
   int4 blockType = point->getType();
-  s << dir << ' ' << label << ' ';
+  s << dir << ' ';
+  printEdgeLabel(s);
+  s << ' ';
   point->printHeader(s);
   s << ' ' << reverse_index;
 }
