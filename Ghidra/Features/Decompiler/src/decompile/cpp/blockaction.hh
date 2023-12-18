@@ -318,7 +318,11 @@ public:
   virtual int4 apply(Funcdata &data);
 };
 
-/// \brief  TODO
+/// \brief Revert irreducible statement condensing (ISC) compiler optimizations that may occur as a result of cross jumping.
+///
+/// Irreducible statement condensing optimizations (opt) will merge 'n' code statements into fewer statements.
+/// For example, multiple outgoing return statements in the source would be merged into a single return.
+/// To revert this opt, the merged statement will be duplicated.
 class ActionRevertISC : public Action {
 public:
   ActionRevertISC(const string &g) : Action(0,"revertisc",g) {}	///< Constructor
