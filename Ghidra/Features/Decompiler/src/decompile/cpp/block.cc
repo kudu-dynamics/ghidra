@@ -58,6 +58,8 @@ void BlockEdge::decode(Decoder &decoder,BlockMap &resolver)
   decoder.closeElement(elemId);
 }
 
+/// Print the unmasked label assigned to \b this single edge
+/// \param s is the output stream
 void BlockEdge::printEdgeLabel(ostream &s) const
 
 {
@@ -90,6 +92,10 @@ void BlockEdge::printEdgeLabel(ostream &s) const
     s << "e";
 }
 
+/// Print the attributes that make up \b this explicit edge
+/// \param s is the output stream
+/// \param dir is the debug string that indicates the edge's direction
+/// as tracked by the FlowBlock
 void BlockEdge::printEdge(ostream &s, string dir) const
 
 {
@@ -655,6 +661,8 @@ void FlowBlock::printHeader(ostream &s) const
   }
 }
 
+/// Print the block_flags assigned to \b this single block
+/// \param s is the output stream
 void FlowBlock::printFlags(ostream &s) const
 
 {
