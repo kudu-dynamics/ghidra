@@ -2180,7 +2180,7 @@ int4 ActionBlockStructure::apply(Funcdata &data)
 /// \brief Revert irreducible statement condensing (ISC) compiler optimizations that may occur as a result of cross jumping.
 ///
 /// Duplicate compiler merged statements.
-/// \param data TODO
+/// \param data Function to manipulate during decompilation
 int4 ActionRevertISC::apply(Funcdata &data)
 
 {
@@ -2192,15 +2192,11 @@ int4 ActionRevertISC::apply(Funcdata &data)
   // Detect cases in the graph that contain a goto edge connecting one node to
   // another node that has multiple predecessors.
 
-  //graph.buildCopy(data.getBasicBlocks());
-
-  // look for block with multiple incoming edges
-  // check incoming edges for if-condition node
-
   vector<BlockGraph *> vec;
   vec.push_back(&graph);
   int4 pos = 0;
   
+  // Traverse BlockGraph as an ordered tree.
   while(pos < vec.size()) {
     BlockGraph *curbl = vec[pos];
     pos += 1;
@@ -2209,6 +2205,7 @@ int4 ActionRevertISC::apply(Funcdata &data)
     curbl->printHeader(std::cout); // removeme debug
     std::cout << "\n"; // removeme debug
 
+    // Check for an If-condition with an outgoing edge
     if (curbl->getType() == FlowBlock::t_if) {
       int4 sizeOut = curbl->sizeOut();
       for (int4 idx=0;idx<sizeOut;++idx) {
@@ -2219,17 +2216,47 @@ int4 ActionRevertISC::apply(Funcdata &data)
         outbl->printHeader(std::cout); // removeme debug
         std::cout << "\n"; // removeme debug
 
-        int sizeIn = outbl->sizeIn();
-        //if (sizeIn < 2) continue;
-
+        // Copy Block has an If-Condition edge
         if (outbl->getType() == FlowBlock::t_copy) {
-          BlockCopy *asBc = (BlockCopy *) outbl;
-          std::cout << "copy ptr=" << static_cast<void*>(asBc) << " sz=" << sizeIn << std::endl;
-
-          BlockBasic *orig = (BlockBasic *) asBc->subBlock(0);
+          BlockCopy *asCopy = (BlockCopy *) outbl;
+          // We expect the following explicit edges:
+          // If -> Copy
+          // True -> Orig
+          // False -> Orig
+          std::cout << "copy ptr=" << static_cast<void*>(asCopy) << " sz=" << asCopy->sizeIn() << std::endl;
+          
+          // Get Original Block
+          BlockBasic *orig = (BlockBasic *) asCopy->subBlock(0);
           int origSizeIn = orig->sizeIn();
           std::cout << "orig ptr=" << static_cast<void*>(orig) << " sz=" << origSizeIn << std::endl;
+          
+          if (origSizeIn < 2) {
+            continue;
+          }
+          // Original Block has multiple incoming edges (true, false)
 
+          // Duplicate merged node
+          std::cout << "duplicating node: " << static_cast<void*>(orig) << std::endl;
+
+          // splitedge will contain edges to be split, IN THE ORDER
+          // they will be split.  So we start from the biggest index
+          // So that edge removal won't change the index of remaining edges
+          data.nodeSplit(orig,1); // fixme
+
+          // ActionBlockStructure::apply()
+          data.installSwitchDefaults();
+          graph.buildCopy(data.getBasicBlocks());
+
+          CollapseStructure collapse(graph);
+          collapse.collapseAll();
+          count += collapse.getChangeCount();
+
+          if (data.hasNoStructBlocks()) {
+            std::cout << "no sblocks somehow?!!!" << std::endl;
+          }
+
+          count += 1;
+          break;
         }
         
       }
@@ -2250,13 +2277,11 @@ int4 ActionRevertISC::apply(Funcdata &data)
       if ((bt == FlowBlock::t_copy)||(bt == FlowBlock::t_basic))
         continue;
 
+      // Add next block to visit
       vec.push_back((BlockGraph *)childbl);
     }
 
   }
-
-  // Duplicate shaded node
-    //data.nodeSplit(curbl,bb->getInIndex(found));
 
   return 0;
 }
