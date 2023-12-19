@@ -2189,12 +2189,17 @@ int4 ActionRevertISC::apply(Funcdata &data)
   const vector<FlowBlock *> &blockList(graph.getList());
   if (blockList.empty()) return 0;
 
-  // Detect cases in the graph that contain a goto edge connecting one node to
-  // another node that has multiple predecessors.
+  // In the SAILR whitepaper, they detect cases in the graph that contain a goto edge
+  // connecting one node to another node that has multiple predecessors.
+  // The near-equivalent case in the Ghidra structured flow graph is an If Block that has
+  // an explicit edge to a copy of a return node with multiple predecessors.
 
   vector<BlockGraph *> vec;
   vec.push_back(&graph);
   int4 pos = 0;
+
+  vector<int4> splitedge;
+  vector<BlockBasic *> retnode;
   
   // Traverse BlockGraph as an ordered tree.
   while(pos < vec.size()) {
@@ -2235,28 +2240,25 @@ int4 ActionRevertISC::apply(Funcdata &data)
           }
           // Original Block has multiple incoming edges (true, false)
 
-          // Duplicate merged node
-          std::cout << "duplicating node: " << static_cast<void*>(orig) << std::endl;
+          // TODO:
+          // - Check if the Original block has a RETURN
+          // - Check if the Original block isSplittable()
 
-          // splitedge will contain edges to be split, IN THE ORDER
-          // they will be split.  So we start from the biggest index
-          // So that edge removal won't change the index of remaining edges
-          data.nodeSplit(orig,1); // fixme
-
-          // ActionBlockStructure::apply()
-          data.installSwitchDefaults();
-          graph.buildCopy(data.getBasicBlocks());
-
-          CollapseStructure collapse(graph);
-          collapse.collapseAll();
-          count += collapse.getChangeCount();
-
-          if (data.hasNoStructBlocks()) {
-            std::cout << "no sblocks somehow?!!!" << std::endl;
+          int4 splitcount = 0;
+          // Track the block to be duplicated or 'split'.
+          // We record the later edges first so that edge removal
+          // doesn't change the remaining edges.
+          for (int4 i=origSizeIn-1;i>=0;--i) {
+            splitedge.push_back(i);
+            retnode.push_back(orig);
+            splitcount += 1;
           }
 
-          count += 1;
-          break;
+          // We only want to split until there is one incoming edge left
+          if (origSizeIn == splitcount) {
+            splitedge.pop_back();
+            retnode.pop_back();
+          }
         }
         
       }
@@ -2281,6 +2283,25 @@ int4 ActionRevertISC::apply(Funcdata &data)
       vec.push_back((BlockGraph *)childbl);
     }
 
+  }
+
+  // Duplicate merged nodes
+  for(int4 i=0;i<splitedge.size();++i) {
+    std::cout << "duplicating node: " << static_cast<void*>(retnode[i]) << std::endl;
+    data.nodeSplit(retnode[i],splitedge[i]);
+    count += 1;
+
+    // After nodeSplit() calls structureReset(), sblocks will be cleared so we need
+    // to reapply ActionBlockStructure::apply()
+    data.installSwitchDefaults();
+    graph.buildCopy(data.getBasicBlocks());
+    CollapseStructure collapse(graph);
+    collapse.collapseAll();
+    count += collapse.getChangeCount();
+
+    if (data.hasNoStructBlocks()) {
+      std::cout << "no sblocks somehow?!!!" << std::endl;
+    }
   }
 
   return 0;
