@@ -15,7 +15,6 @@
  */
 #include "blockaction.hh"
 #include "funcdata.hh"
-#include <iostream> // removeme debug
 
 namespace ghidra {
 
@@ -2206,20 +2205,11 @@ int4 ActionRevertISC::apply(Funcdata &data)
     BlockGraph *curbl = vec[pos];
     pos += 1;
 
-    std::cout << "cur: " << static_cast<void*>(curbl) << " ";
-    curbl->printHeader(std::cout); // removeme debug
-    std::cout << "\n"; // removeme debug
-
     // Check for an If-condition with an outgoing edge
     if (curbl->getType() == FlowBlock::t_if) {
       int4 sizeOut = curbl->sizeOut();
       for (int4 idx=0;idx<sizeOut;++idx) {
         FlowBlock *outbl = curbl->getOut(idx);
-
-        std::cout << "out: " << static_cast<void*>(outbl) << " ";
-
-        outbl->printHeader(std::cout); // removeme debug
-        std::cout << "\n"; // removeme debug
 
         // Copy Block has an If-Condition edge
         if (outbl->getType() == FlowBlock::t_copy) {
@@ -2228,13 +2218,10 @@ int4 ActionRevertISC::apply(Funcdata &data)
           // If -> Copy
           // True -> Orig
           // False -> Orig
-          std::cout << "copy ptr=" << static_cast<void*>(asCopy) << " sz=" << asCopy->sizeIn() << std::endl;
           
           // Get Original Block
           BlockBasic *orig = (BlockBasic *) asCopy->subBlock(0);
-          int origSizeIn = orig->sizeIn();
-          std::cout << "orig ptr=" << static_cast<void*>(orig) << " sz=" << origSizeIn << std::endl;
-          
+          int origSizeIn = orig->sizeIn();         
           if (origSizeIn < 2) {
             continue;
           }
@@ -2260,7 +2247,6 @@ int4 ActionRevertISC::apply(Funcdata &data)
             retnode.pop_back();
           }
         }
-        
       }
     }
 
@@ -2269,10 +2255,6 @@ int4 ActionRevertISC::apply(Funcdata &data)
     int4 sz = curbl->getSize();
     for(int4 i=0;i<sz;++i) {
       FlowBlock *childbl = curbl->getBlock(i);
-
-      std::cout << "child: " << static_cast<void*>(childbl) << " ";
-      childbl->printHeader(std::cout); // removeme debug
-      std::cout << "\n"; // removeme debug
 
       bt = childbl->getType();
       // BlockCopy and BlockBasic are leaf nodes that we don't recurse into
@@ -2287,7 +2269,6 @@ int4 ActionRevertISC::apply(Funcdata &data)
 
   // Duplicate merged nodes
   for(int4 i=0;i<splitedge.size();++i) {
-    std::cout << "duplicating node: " << static_cast<void*>(retnode[i]) << std::endl;
     data.nodeSplit(retnode[i],splitedge[i]);
     count += 1;
 
@@ -2300,7 +2281,7 @@ int4 ActionRevertISC::apply(Funcdata &data)
     count += collapse.getChangeCount();
 
     if (data.hasNoStructBlocks()) {
-      std::cout << "no sblocks somehow?!!!" << std::endl;
+      data.getArch()->printMessage("FuncData has no structured blocks!");
     }
   }
 
