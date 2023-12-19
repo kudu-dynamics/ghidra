@@ -318,9 +318,12 @@ public:
   virtual int4 apply(Funcdata &data);
 };
 
-/// \brief TODO
+/// \brief Revert irreducible statement duplication (ISD) compiler optimizations that may occur as a result of jump threading.
 ///
-/// TODO
+/// Irreducible statement duplication optimizations (opt) will duplicate code statements.
+/// For example, when there is an overlapping If-condition, the unconditional code statement in-between
+/// may be duplicated.
+/// To revert this opt, the duplicated statement will be merged.
 class ActionRevertISD : public Action {
 public:
   ActionRevertISD(const string &g) : Action(0,"revertisd",g) {} ///< Constructor

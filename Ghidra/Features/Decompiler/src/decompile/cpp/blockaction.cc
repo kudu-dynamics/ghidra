@@ -2176,10 +2176,10 @@ int4 ActionBlockStructure::apply(Funcdata &data)
   return 0;
 }
 
-/// \brief TODO
+/// \brief Revert irreducible statement duplication (ISD) compiler optimizations that may occur as a result of jump threading.
 ///
-/// TODO
-/// \param data TODO
+/// Merge duplicated compiler statements.
+/// \param data Function to manipulate during decompilation
 int4 ActionRevertISD::apply(Funcdata &data)
 
 {
