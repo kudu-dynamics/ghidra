@@ -15,6 +15,7 @@
  */
 #include "blockaction.hh"
 #include "funcdata.hh"
+#include <iostream> // removeme debug
 
 namespace ghidra {
 
@@ -2184,6 +2185,117 @@ int4 ActionRevertISD::apply(Funcdata &data)
 
 {
   BlockGraph &graph(data.getStructure());
+  ConditionalJoin condjoin(data);
+
+  const vector<FlowBlock *> &blockList(graph.getList());
+  if (blockList.empty()) return 0;
+
+  vector<BlockGraph *> vec;
+  vec.push_back(&graph);
+  int4 pos = 0;
+
+  vector<BlockBasic *> candidates;
+
+  // Traverse BlockGraph as an ordered tree.
+  while(pos < vec.size()) {
+    BlockGraph *curbl = vec[pos];
+    pos += 1;
+
+    std::cout << "cur: " << static_cast<void*>(curbl) << " ";
+    curbl->printHeader(std::cout); // removeme debug
+    std::cout << "\n"; // removeme debug
+
+    // Check for an If-condition with an interior goto
+    if (curbl->getType() == FlowBlock::t_if) {
+
+      if (!curbl->hasInteriorGoto()) {
+        continue;
+      }
+
+      int4 listSize = curbl->getSize();
+      for (int4 idx=0;idx<listSize;++idx) {
+        FlowBlock *child = curbl->getBlock(idx);
+
+        std::cout << "child: " << static_cast<void*>(child) << " ";
+        child->printHeader(std::cout); // removeme debug
+        std::cout << "\n"; // removeme debug
+
+        if (child->getType() != FlowBlock::t_copy) continue;
+
+        BlockCopy * asCopy = (BlockCopy *) child;
+        BlockBasic * orig = (BlockBasic *) asCopy->subBlock(0);       
+
+        // We expect the following explicit edges:
+        // child -> out
+        // match -> out
+        int4 sizeOut = orig->sizeOut();
+        for (int4 j=0;j<sizeOut;++j) {
+          FlowBlock *out = orig->getOut(j);
+          if (out->getType() != FlowBlock::t_basic) continue;
+
+          int4 sizeIn = out->sizeIn();
+          for (int4 k=0;k<sizeIn;++k) {
+            FlowBlock *in = out->getIn(k);
+            if (child == in) continue;
+
+            if (in->getType() == FlowBlock::t_basic) {
+              BlockBasic * asBb = (BlockBasic *) in;
+              candidates.push_back(asBb);
+
+              if (orig == asBb) continue;
+
+              FlowBlock * inCopy = asBb->getCopyMap();
+              std::cout << "inCopy: " << static_cast<void*>(inCopy) << " ";
+              inCopy->printHeader(std::cout);
+              std::cout << "\n"; // removeme
+
+              // FIXME: Attempt merge
+              std::cout << "attempting merge with: " << static_cast<void*>(orig) << " ";
+              orig->printHeader(std::cout);
+              std::cout << " and " << static_cast<void*>(asBb) << " ";
+              asBb->printHeader(std::cout);
+              std::cout << "\n"; // removeme
+
+              // FIXME: Block 2 does not have two outgoing edges
+              // orig = Block 2
+              // asBb = Block 3
+              if (condjoin.match(orig,asBb)) {
+                std::cout << "merge will succeed: " << "\n"; // removeme
+
+                count += 1;		// Indicate change has been made
+                condjoin.execute();
+                condjoin.clear();
+              }
+            }
+
+          }
+        }
+
+      } //endfor
+
+    } // endif
+
+    // Recurse into child blocks
+    FlowBlock::block_type bt;
+    int4 sz = curbl->getSize();
+    for(int4 i=0;i<sz;++i) {
+      FlowBlock *childbl = curbl->getBlock(i);
+
+      std::cout << "childbl: " << static_cast<void*>(childbl) << " ";
+      childbl->printHeader(std::cout); // removeme debug
+      std::cout << "\n"; // removeme debug
+
+      bt = childbl->getType();
+      // BlockCopy and BlockBasic are leaf nodes that we don't recurse into
+      if ((bt == FlowBlock::t_copy)||(bt == FlowBlock::t_basic))
+        continue;
+
+      // Add next block to visit
+      vec.push_back((BlockGraph *)childbl);
+    }
+
+  }
+
   return 0;
 }
 
