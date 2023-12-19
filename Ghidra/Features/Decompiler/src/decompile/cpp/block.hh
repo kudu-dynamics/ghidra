@@ -62,6 +62,8 @@ struct BlockEdge {
   BlockEdge(FlowBlock *pt,uint4 lab,int4 rev) { label=lab; point=pt; reverse_index = rev; }	///< Constructor
   void encode(Encoder &encoder) const;	///< Encode \b this edge to a stream
   void decode(Decoder &decoder,BlockMap &resolver);	///< Restore \b this edge from a stream
+  void printEdgeLabel(ostream &s) const; ///< Print string-form labels of \b this edge to stream
+  void printEdge(ostream &s, string dir) const; ///< Print attributes of \b this edge to stream
 };
 
 /// \brief Description of a control-flow block containing PcodeOps
@@ -201,6 +203,7 @@ public:
   virtual void scopeBreak(int4 curexit,int4 curloopexit) {}
 
   virtual void printHeader(ostream &s) const;		///< Print a simple description of \b this to stream
+  virtual void printFlags(ostream &s) const;   ///< Print string-form flags of \b this to stream
   virtual void printTree(ostream &s,int4 level) const;	///< Print tree structure of any blocks owned by \b this
 
   /// \brief Print raw instructions contained in \b this FlowBlock
