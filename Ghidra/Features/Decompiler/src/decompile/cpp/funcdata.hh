@@ -543,6 +543,7 @@ public:
   void removeBranch(BlockBasic *bb,int4 num);	///< Remove the indicated branch from a basic block
   BlockBasic *nodeJoinCreateBlock(BlockBasic *block1,BlockBasic *block2,BlockBasic *exita,BlockBasic *exitb,
 				  bool fora_block1ishigh,bool forb_block1ishigh,const Address &addr);
+  BlockBasic *mergeBlocks(BlockBasic *block1,BlockBasic *block2);
   void nodeSplit(BlockBasic *b,int4 inedge);
   bool forceGoto(const Address &pcop,const Address &pcdest);
   void removeFromFlowSplit(BlockBasic *bl,bool swap);

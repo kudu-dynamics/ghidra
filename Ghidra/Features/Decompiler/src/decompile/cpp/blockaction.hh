@@ -225,6 +225,14 @@ public:
   void collapseAll(void);			///< Run the whole algorithm
 };
 
+/// \brief A pair of Varnode objects that have been split (and should be merged)
+struct MergePair {
+  Varnode *side1;		///< Varnode coming from block1
+  Varnode *side2;		///< Varnode coming from block2
+  MergePair(Varnode *s1,Varnode *s2) { side1 = s1; side2 = s2; }	///< Construct from Varnode objects
+  bool operator<(const MergePair &op2) const;				///< Lexicographic comparator
+};
+
 /// \brief Discover and eliminate \e split conditions
 ///
 /// A \b split condition is when a conditional expression, resulting in a CBRANCH,
@@ -232,13 +240,6 @@ public:
 /// Instead of a single conditional in a merged block,
 /// there are two copies of the conditional, two splitting blocks and no direct merge.
 class ConditionalJoin {
-  /// \brief A pair of Varnode objects that have been split (and should be merged)
-  struct MergePair {
-    Varnode *side1;		///< Varnode coming from block1
-    Varnode *side2;		///< Varnode coming from block2
-    MergePair(Varnode *s1,Varnode *s2) { side1 = s1; side2 = s2; }	///< Construct from Varnode objects
-    bool operator<(const MergePair &op2) const;				///< Lexicographic comparator
-  };
   Funcdata &data;			///< The function being analyzed
   BlockBasic *block1;			///< Side 1 of the (putative) split
   BlockBasic *block2;			///< Side 2 of the (putative) split
@@ -260,6 +261,19 @@ class ConditionalJoin {
 public:
   ConditionalJoin(Funcdata &fd) : data(fd) { }	///< Constructor
   bool match(BlockBasic *b1,BlockBasic *b2);	///< Test blocks for the merge condition
+  void execute(void);				///< Execute the merge
+  void clear(void);				///< Clear for a new test
+};
+
+class DuplicateJoin {
+  Funcdata &data;			///< The function being analyzed
+  BlockBasic *block1;			///< Duplicate block 1
+  BlockBasic *block2;			///< Duplicate block 2
+  BlockBasic *joinblock;		///< The new joined block
+  map<MergePair,Varnode *> mergeneed;	///< Map from the MergePair of Varnodes to the merged Varnode
+public:
+  DuplicateJoin(Funcdata &fd) : data(fd) { }  ///< Constructor
+  bool match(BlockBasic *b1,BlockBasic *b2);  ///< Test blocks for the merge
   void execute(void);				///< Execute the merge
   void clear(void);				///< Clear for a new test
 };

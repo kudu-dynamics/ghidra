@@ -1881,7 +1881,7 @@ void CollapseStructure::collapseAll(void)
 /// Compare based on the creation index of \b side1 first then \b side2
 /// \param op2 is the MergePair to compare to \b this
 /// \return \b true if \b this comes before \b op2
-bool ConditionalJoin::MergePair::operator<(const MergePair &op2) const
+bool MergePair::operator<(const MergePair &op2) const
 
 {
   uint4 s1 = side1->getCreateIndex();
@@ -2101,6 +2101,82 @@ void ConditionalJoin::clear(void)
   mergeneed.clear();
 }
 
+bool DuplicateJoin::match(BlockBasic *b1,BlockBasic *b2)
+
+{
+  // TODO: Loop through PCode and find exact match of one inside the other
+  list<PcodeOp *>::const_iterator iter;
+  PcodeOp *op;
+
+  for(iter=b1->beginOp();iter!=b1->endOp();++iter) {
+    op = *iter;
+
+    //   int4 numInput(void) const { return inrefs.size(); } ///< Get the number of inputs to this op
+    // getIn(i)
+    // getOut()
+
+    //if (!op->isInstructionStart()) continue;
+
+    // TODO: Match storage equivalent statements
+    // Check read / write locations
+    // Check input varnodes
+    // Check output varnodes
+    if (op->isAssignment()) {
+      // write
+    }
+
+    if (op->isCollapsible()) {
+
+    }
+    //   bool isMoveable(const PcodeOp *point) const;	///< Can \b this be moved to after \e point, without disturbing data-flow
+
+
+    // For calls, check arg storage locations and function addresses
+    if (op->isCall()) {
+      // call
+    }
+    OpCode opc = op->code();
+    if (opc == CPUI_CALL) {
+
+    }
+
+    uintm cseHash = op->getCseHash();
+    std::cout << "b1 op: " << static_cast<void*>(op) << "|+|" << cseHash << "|+|"; // removeme
+    op->printDebug(std::cout); // removeme
+    std::cout << "\n"; // removeme debug
+
+    // bool isCseMatch(const PcodeOp *op) const; 
+  }
+
+  for(iter=b2->beginOp();iter!=b2->endOp();++iter) {
+    op = *iter;
+
+    //if (!op->isInstructionStart()) continue;
+
+    uintm cseHash = op->getCseHash();
+    std::cout << "b2 op: " << static_cast<void*>(op) << "|+|" << cseHash << "|+|"; // removeme
+    op->printDebug(std::cout); // removeme
+    std::cout << "\n"; // removeme debug
+
+    // bool isCseMatch(const PcodeOp *op) const; 
+  }
+
+  return true;
+}
+
+void DuplicateJoin::execute(void)
+
+{
+  //joinblock = data.mergeBlocks(block1,block2);
+}
+
+void DuplicateJoin::clear(void)
+
+{
+  mergeneed.clear();
+}
+
+
 int4 ActionStructureTransform::apply(Funcdata &data)
 
 {
@@ -2185,7 +2261,7 @@ int4 ActionRevertISD::apply(Funcdata &data)
 
 {
   BlockGraph &graph(data.getStructure());
-  ConditionalJoin condjoin(data);
+  DuplicateJoin dupjoin(data);
 
   const vector<FlowBlock *> &blockList(graph.getList());
   if (blockList.empty()) return 0;
@@ -2259,13 +2335,16 @@ int4 ActionRevertISD::apply(Funcdata &data)
               // FIXME: Block 2 does not have two outgoing edges
               // orig = Block 2
               // asBb = Block 3
-              if (condjoin.match(orig,asBb)) {
+              if (dupjoin.match(orig,asBb)) {
                 std::cout << "merge will succeed: " << "\n"; // removeme
 
+                dupjoin.execute();
+                dupjoin.clear();
+
                 count += 1;		// Indicate change has been made
-                condjoin.execute();
-                condjoin.clear();
               }
+
+              break; // REMOVEME: HACK 
             }
 
           }

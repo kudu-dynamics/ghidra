@@ -812,6 +812,20 @@ BlockBasic *Funcdata::nodeJoinCreateBlock(BlockBasic *block1,BlockBasic *block2,
   return newblock;
 }
 
+BlockBasic *Funcdata::mergeBlocks(BlockBasic *block1,BlockBasic *block2)
+
+{
+  BlockBasic *newblock = bblocks.newBlockBasic(this);
+  newblock->setFlag(FlowBlock::f_joined_block);
+  //newblock->setInitialRange(addr, addr);
+
+  bblocks.addEdge(block1,newblock);
+  bblocks.addEdge(block2,newblock);
+  structureReset();
+  return newblock;
+}
+
+
 /// \brief Split given basic block b along an \e in edge
 ///
 /// A copy of the block is made, inheriting the same \e out edges but only the
