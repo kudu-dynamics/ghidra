@@ -2235,7 +2235,10 @@ int4 ActionRevertISC::apply(Funcdata &data)
 
           // TODO:
           // - Check if the Original block has a RETURN
-          // - Check if the Original block isSplittable()
+          
+          if (!orig->isSplittable()) {
+            continue;
+          }
 
           int4 splitcount = 0;
           // Track the block to be duplicated or 'split'.
@@ -2352,24 +2355,7 @@ void ActionReturnSplit::gatherReturnGotos(FlowBlock *parent,vector<FlowBlock *> 
 bool ActionReturnSplit::isSplittable(BlockBasic *b)
 
 {
-  list<PcodeOp *>::const_iterator iter;
-  PcodeOp *op;
-
-  for(iter=b->beginOp();iter!=b->endOp();++iter) {
-    op = *iter;
-    OpCode opc = op->code();
-    if (opc == CPUI_MULTIEQUAL) continue;
-    if ((opc == CPUI_COPY)||(opc == CPUI_RETURN)) {
-      for(int4 i=0;i<op->numInput();++i) {
-	if (op->getIn(i)->isConstant()) continue;
-	if (op->getIn(i)->isAnnotation()) continue;
-	if (op->getIn(i)->isFree()) return false;
-      }
-      continue;
-    }
-    return false;
-  }
-  return true;
+  return b->isSplittable();
 }
 
 int4 ActionReturnSplit::apply(Funcdata &data)
