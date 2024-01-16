@@ -58,6 +58,57 @@ void BlockEdge::decode(Decoder &decoder,BlockMap &resolver)
   decoder.closeElement(elemId);
 }
 
+/// Print the unmasked label assigned to \b this single edge
+/// \param s is the output stream
+void BlockEdge::printEdgeLabel(ostream &s) const
+
+{
+  uint4 isUnstructured = label & point->f_goto_edge;
+  uint4 isLoop = label & point->f_loop_edge;
+  uint4 isDefaultSwitch = label & point->f_defaultswitch_edge;
+  uint4 isIrreducible = label & point->f_irreducible;
+  uint4 isTree = label & point->f_tree_edge;
+  uint4 isForward = label & point->f_forward_edge;
+  uint4 isCross = label & point->f_cross_edge;
+  uint4 isBack = label & point->f_back_edge;
+  uint4 isLoopExit = label & point->f_loop_exit_edge;
+  if (isUnstructured)
+    s << "u";
+  if (isLoop)
+    s << "l";
+  if (isDefaultSwitch)
+    s << "d";
+  if (isIrreducible)
+    s << "i";
+  if (isTree)
+    s << "t";
+  if (isForward)
+    s << "f";
+  if (isCross)
+    s << "c";
+  if (isBack)
+    s << "b";
+  if (isLoopExit)
+    s << "e";
+}
+
+/// Print the attributes that make up \b this explicit edge
+/// \param s is the output stream
+/// \param dir is the debug string that indicates the edge's direction
+/// as tracked by the FlowBlock
+void BlockEdge::printEdge(ostream &s, string dir) const
+
+{
+  int4 blockIndex = point->getIndex();
+  int4 blockFlags = point->getFlags();
+  int4 blockType = point->getType();
+  s << dir << ' ';
+  printEdgeLabel(s);
+  s << ' ';
+  point->printHeader(s);
+  s << ' ' << reverse_index;
+}
+
 FlowBlock::FlowBlock(void)
 
 {
@@ -610,6 +661,48 @@ void FlowBlock::printHeader(ostream &s) const
   }
 }
 
+/// Print the block_flags assigned to \b this single block
+/// \param s is the output stream
+void FlowBlock::printFlags(ostream &s) const
+
+{
+  s << "(";
+  if (flags & f_goto_goto) s << "goto_goto";
+  s << "|";
+  if (flags & f_break_goto) s << "break_goto";
+  s << "|";
+  if (flags & f_continue_goto) s << "continue_goto";
+  s << "|";
+  if (flags & f_switch_out) s << "switch_out";
+  s << "|";
+  if (flags & f_unstructured_targ) s << "unstructured_targ";
+  s << "|";
+  if (flags & f_mark) s << "mark";
+  s << "|";
+  if (flags & f_mark2) s << "mark2";
+  s << "|";
+  if (flags & f_entry_point) s << "entry_point";
+  s << "|";
+  if (flags & f_interior_gotoout) s << "interior_gotoout";
+  s << "|";
+  if (flags & f_interior_gotoin) s << "interior_gotoin";
+  s << "|";
+  if (flags & f_label_bumpup) s << "label_bumpup";
+  s << "|";
+  if (flags & f_donothing_loop) s << "donothing_loop";
+  s << "|";
+  if (flags & f_dead) s << "dead";
+  s << "|";
+  if (flags & f_whiledo_overflow) s << "whiledo_overflow";
+  s << "|";
+  if (flags & f_flip_path) s << "flip_path";
+  s << "|";
+  if (flags & f_joined_block) s << "joined_block";
+  s << "|";
+  if (flags & f_duplicate_block) s << "duplicate_block";
+  s << ")";
+}
+
 /// Recursively print out the hierarchical structure of \b this FlowBlock.
 /// \param s is the output stream
 /// \param level is the current level of indentation
@@ -621,7 +714,21 @@ void FlowBlock::printTree(ostream &s,int4 level) const
   for(i=0;i<level;++i)
     s << "  ";
   printHeader(s);
+  s << " ";
+  printFlags(s);
   s << endl;
+
+  for(int4 i=0;i<intothis.size();++i) {
+    for(int4 j=0;j<level;++j) s << "  ";
+    intothis[i].printEdge(s, "in");
+    s << endl;
+  }
+  for(int4 i=0;i<outofthis.size();++i) {
+    for(int4 j=0;j<level;++j) s << "  ";
+    outofthis[i].printEdge(s, "out");
+    s << endl;
+  }
+  
 }
 
 /// If \b this FlowBlock was ends with a computed jump, retrieve
