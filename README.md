@@ -131,3 +131,5 @@ source project.
 [master]: https://github.com/NationalSecurityAgency/ghidra/archive/refs/heads/master.zip
 [security]: https://github.com/NationalSecurityAgency/ghidra/security/advisories
 [ghidradev]: https://htmlpreview.github.io/?https://github.com/NationalSecurityAgency/ghidra/blob/master/GhidraBuild/EclipsePlugins/GhidraDev/GhidraDevPlugin/GhidraDev_README.html
+
+Distribution A. (Approved for public release; distribution unlimited.)
